@@ -49,6 +49,13 @@ export interface RegexTemplate {
   category: string
 }
 
+export interface ParseIssue {
+  message: string // 问题描述
+  position: number // 大致出错位置（0 起始的字符索引）
+  hint: string // 可能原因与修复建议
+  target: 'pattern' | 'test' // 问题所在的输入
+}
+
 export interface ASTNode {
   type: 'char' | 'star' | 'plus' | 'question' | 'or' | 'concat' | 'group' | 'dot' | 'anchor' | 'charclass' | 'digit' | 'word' | 'space'
   value?: string

@@ -19,6 +19,7 @@
       <div class="lg:w-1/4 space-y-4">
         <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
           <h3 class="text-sm font-bold text-slate-400 mb-3">匹配统计</h3>
+          <div v-if="store.isStale" class="mb-2 text-xs text-orange-400">⚠ 以下为上一次有效模式的结果</div>
           <div v-if="store.matchResult" class="space-y-2 text-sm">
             <div class="flex justify-between"><span class="text-slate-500">匹配状态</span><span :class="store.matchResult.matched ? 'text-green-400' : 'text-red-400'">{{ store.matchResult.matched ? '✓ 匹配成功' : '✗ 未匹配' }}</span></div>
             <div class="flex justify-between"><span class="text-slate-500">匹配文本</span><span class="text-cyan-400 font-mono truncate ml-2">{{ store.matchResult.matchText || '—' }}</span></div>

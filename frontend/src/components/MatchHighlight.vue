@@ -1,8 +1,8 @@
 <template>
   <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
     <h3 class="text-sm font-bold text-slate-400 mb-3">匹配结果高亮</h3>
-    <div v-if="store.error" class="text-red-400 text-sm">解析错误</div>
-    <div v-else-if="store.matchHighlight" class="bg-slate-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+    <div v-if="store.isStale" class="mb-2 text-xs text-orange-400">⚠ 当前模式存在错误，以下为上一次有效结果</div>
+    <div v-if="store.matchHighlight" class="bg-slate-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
       <span class="text-slate-500">{{ store.matchHighlight.before }}</span>
       <span class="bg-green-600 text-white px-1 rounded">{{ store.matchHighlight.match }}</span>
       <span class="text-slate-500">{{ store.matchHighlight.after }}</span>

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { NFA, MatchResult, MatchStep, RegexTemplate, ASTNode } from '../types'
+import type { NFA, MatchResult, MatchStep, RegexTemplate, ASTNode, ParseIssue } from '../types'
+import { validatePattern, validateTestString } from '../utils/regexValidate'
 
 const GROUP_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6']
 
@@ -399,8 +400,12 @@ export const useRegexStore = defineStore('regex', () => {
   const nfa = ref<NFA | null>(null)
   const matchResult = ref<MatchResult | null>(null)
   const ast = ref<ASTNode | null>(null)
-  const error = ref('')
+  const error = ref<ParseIssue | null>(null)
   const selectedTemplate = ref<string>('')
+  // 上一次成功执行的模式，用于错误期间对照展示
+  const lastValidPattern = ref('')
+  // 当前展示的结果是否因新输入有误而过期（保留上一次有效结果）
+  const isStale = computed(() => error.value !== null && matchResult.value !== null)
 
   const groupColors = GROUP_COLORS
 
@@ -417,18 +422,26 @@ export const useRegexStore = defineStore('regex', () => {
   })
 
   function execute() {
-    error.value = ''
+    // 所有入口（手动输入 / 模板套用 / 执行按钮）共用同一套校验规则与阈值
+    const issue = validatePattern(pattern.value) || validateTestString(testString.value)
+    if (issue) {
+      // 空模式、未闭合分组、超长输入等：只提示，保留上一次有效结果，不清空工作台
+      error.value = issue
+      isPlaying.value = false
+      return
+    }
     try {
       const built = buildNFA(pattern.value)
       nfa.value = computeNFA(built)
       matchResult.value = runMatch(built.states, built.startState, testString.value)
       ast.value = parseAST(pattern.value)
+      error.value = null
+      lastValidPattern.value = pattern.value
       currentStep.value = 0
     } catch (e: any) {
-      error.value = e.message || '正则表达式解析错误'
-      nfa.value = null
-      matchResult.value = null
-      ast.value = null
+      // 解析异常同样不清空工作台，保留上一次有效结果供对照
+      error.value = { message: e.message || '正则表达式解析错误', position: -1, hint: '请检查模式语法，或从模板库选择一个模板对照修改', target: 'pattern' }
+      isPlaying.value = false
     }
   }
 
@@ -481,7 +494,7 @@ export const useRegexStore = defineStore('regex', () => {
 
   return {
     pattern, testString, currentStep, isPlaying, nfa, matchResult, ast, error,
-    selectedTemplate, groupColors, matchHighlight,
+    selectedTemplate, groupColors, matchHighlight, lastValidPattern, isStale,
     execute, setPattern, setTestString, applyTemplate,
     stepForward, stepBackward, resetStep, play, stop
   }
